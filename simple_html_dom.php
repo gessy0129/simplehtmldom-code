@@ -74,9 +74,12 @@ function file_get_html($url, $use_include_path = false, $context=null, $offset =
 	$dom = new simple_html_dom(null, $lowercase, $forceTagsClosed, $target_charset, $stripRN, $defaultBRText, $defaultSpanText);
 	// For sourceforge users: uncomment the next line and comment the retreive_url_contents line 2 lines down if it is not already done.
 	$contents = file_get_contents($url, $use_include_path, $context, $offset);
+    // MEMO: 変換ロジック。sjisからマッチさせていく
+    $contents = mb_convert_encoding($contents, 'UTF-8', 'sjis-win,eucJP-win,UTF-8');
 	// Paperg - use our own mechanism for getting the contents as we want to control the timeout.
 	//$contents = retrieve_url_contents($url);
-	if (empty($contents) || strlen($contents) > MAX_FILE_SIZE)
+    // ファイルサイズチェックを無くす
+	if (empty($contents))
 	{
 		return false;
 	}
@@ -89,7 +92,8 @@ function file_get_html($url, $use_include_path = false, $context=null, $offset =
 function str_get_html($str, $lowercase=true, $forceTagsClosed=true, $target_charset = DEFAULT_TARGET_CHARSET, $stripRN=true, $defaultBRText=DEFAULT_BR_TEXT, $defaultSpanText=DEFAULT_SPAN_TEXT)
 {
 	$dom = new simple_html_dom(null, $lowercase, $forceTagsClosed, $target_charset, $stripRN, $defaultBRText, $defaultSpanText);
-	if (empty($str) || strlen($str) > MAX_FILE_SIZE)
+    // ファイルサイズチェックを無くす
+	if (empty($str))
 	{
 		$dom->clear();
 		return false;
@@ -784,8 +788,8 @@ class simple_html_dom_node
 
 		$converted_text = $text;
 
-		$sourceCharset = "";
-		$targetCharset = "";
+		$sourceCharset = "sjis-win";
+		$targetCharset = "UTF-8";
 
 		if ($this->dom)
 		{
@@ -803,7 +807,10 @@ class simple_html_dom_node
 			}
 			else
 			{
-				$converted_text = iconv($sourceCharset, $targetCharset, $text);
+                //				$converted_text = iconv($sourceCharset, $targetCharset, $text);
+                //                              $converted_text = iconv($sourceCharset, "UTF-8//IGNORE", $text);
+                //$converted_text = mb_convert_encoding($text, "UTF-8", $sourceCharset);
+                $converted_text = $text;
 			}
 		}
 
